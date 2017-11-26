@@ -5,7 +5,7 @@
 ## 变量声明和提升
 
 Variable declarations using `var` are treated as if they are at the top of the function (or global scope, if declared outside of a function) regardless of where the actual declaration occurs; this is called *hoisting*. For a demonstration of what hoisting does, consider the following function definition:
-不管实际的声明出现在哪里，通过 `var`的变量声明都会被认为是在函数的顶部的（如果在函数外声明则是全局的作用域）。
+不管实际的声明出现在哪里，通过 `var`的变量声明都会被认为是在函数的顶部的（如果在函数外声明则是全局的作用域）-- 即所谓的“提升”。为解释提升的作用，我们从以下函数定义来考虑：
 ```js
 function getValue(condition) {
 
@@ -17,16 +17,16 @@ function getValue(condition) {
         return value;
     } else {
 
-        // value exists here with a value of undefined
+        // 此处value存在，但值为undefined
 
         return null;
     }
 
-    // value exists here with a value of undefined
+    // 此处value存在，但值为undefined
 }
 ```
 
-If you are unfamiliar with JavaScript, then you might expect the variable `value` to only be created if `condition` evaluates to true. In fact, the variable `value` is created regardless. Behind the scenes, the JavaScript engine changes the `getValue` function to look like this:
+如果你不熟悉JavaScript，你可能会认为变量`value`仅会在`condition`条件判断为true的时候创建。然而不管什么情况，实际上变量`value`都会被创建。从底层实现来看，JavaScript引擎会像下边这样改变函数`getValue`：
 
 ```js
 function getValue(condition) {
@@ -36,7 +36,7 @@ function getValue(condition) {
     if (condition) {
         value = "blue";
 
-        // other code
+        // 其他代码
 
         return value;
     } else {
@@ -46,22 +46,22 @@ function getValue(condition) {
 }
 ```
 
-The declaration of `value` is hoisted to the top, while the initialization remains in the same spot. That means the variable `value` is actually still accessible from within the `else` clause. If accessed from there, the variable would just have a value of `undefined` because it hasn't been initialized.
+`value`的声明被提升到了顶部而它的初始化还是在原来的位置。这意味着变量`value`实际上还是可以从`else`子句被访问的。若从`else`访问，因为该变量还没有被初始化，它的值会是`undefined`。
 
-It often takes new JavaScript developers some time to get used to declaration hoisting, and misunderstanding this unique behavior can end up causing bugs. For this reason, ECMAScript 6 introduces block level scoping options to make the controlling a variable's lifecycle a little more powerful.
+对于JavaScript的开发新手来说，他们往往需要花费一些时间去习惯声明提升，也会误解这独特的行为会引起缺陷。正因如此，ES6引入了块级作用域配置来更好地控制一个变量的生命周期。
 
-## Block-Level Declarations
+## 块级声明
 
-Block-level declarations are those that declare variables that are inaccessible outside of a given block scope. Block scopes, also called lexical scopes, are created:
+块级声明是指那些变量在给定块作用域之外不能被访问的声明。块级作用域，或称词法范围（lexical scopes），可以通过以下方式创建：
 
-1. Inside of a function
-1. Inside of a block (indicated by the `{` and `}` characters)
+1. 函数内
+1. 块内(由`{`和`}`标识)
 
-Block scoping is how many C-based languages work, and the introduction of block-level declarations in ECMAScript 6 is intended to bring that same flexibility (and uniformity) to JavaScript.
+块级作用域跟许多基于C的编程语言的工作方式一样，而ES6引入的块级声明是为了给JavaScript带来同样的灵活性（一致性）。
 
-### Let Declarations
+### Let声明
 
-The `let` declaration syntax is the same as the syntax for `var`. You can basically replace `var` with `let` to declare a variable, but limit the variable's scope to only the current code block (there are a few other subtle differences discussed a bit later, as well). Since `let` declarations are not hoisted to the top of the enclosing block, you may want to always place `let` declarations first in the block, so that they are available to the entire block. Here's an example:
+`let`的声明语法和`var`的一样。声明一个变量时基本上你都可以直接把`var`换成`let`，但其作用域会被限制成只在当前的代码块（在后面的内容还会介绍其他的一些区别）。因为`let`声明不会被提升到代码块的顶部，你可能要把`let`声明一直放在代码块的首行，这样他们才能在整个代码块里可用。比如说这个例子：
 
 ```js
 function getValue(condition) {
@@ -69,76 +69,78 @@ function getValue(condition) {
     if (condition) {
         let value = "blue";
 
-        // other code
+        // 其他代码
 
         return value;
     } else {
 
-        // value doesn't exist here
+        // 此处value不存在
 
         return null;
     }
 
-    // value doesn't exist here
+    // 此处value不存在
 }
 ```
 
-This version of the `getValue` function behaves much closer to how you'd expect it to in other C-based languages. Since the variable `value` is declared using `let` instead of `var`, the declaration isn't hoisted to the top of the function definition, and the variable `value` is no longer accessible once execution flows out of the `if` block. If `condition` evaluates to false, then `value` is never declared or initialized.
+这个版本的`getValue`函数已经很接近那些你期待的基于C的编程语言的工作方式。因为变量`value`是通过`let`而不是`var`声明的，这个声明不会被提到该函数定义的顶部，而且只要`if`代码块被执行完毕，该变量`value`将不能再被访问。如果`condition`返回false，那`value`将永远不会被声明或者初始化。
 
-### No Redeclaration
+### 没有再声明
 
-If an identifier has already been defined in a scope, then using the identifier in a `let` declaration inside that scope causes an error to be thrown. For example:
+如果一个标识符已经在一个作用域里被定义，那么在那个作用域里的`let`声明里使用该标识符将会报错。比如：
 
 ```js
 var count = 30;
 
-// Syntax error
+// 语法错误
 let count = 40;
 ```
 
-In this example, `count` is declared twice: once with `var` and once with `let`. Because `let` will not redefine an identifier that already exists in the same scope, the `let` declaration will throw an error. On the other hand, no error is thrown if a `let` declaration creates a new variable with the same name as a variable in its containing scope, as demonstrated in the following code:
+
+在这个例子中，`count`被定义了两次：一次是通过`var`，一次是`let`。因为`let`不会重新定义一个已经存在于同一个作用域的标识符，所以它会抛出错误。然而如果`let`声明创建了一个新的跟在它的所包含域里同名的变量，它不会抛出错误，就像以下代码所展示的：
 
 ```js
 var count = 30;
 
-// Does not throw an error
+// 不会抛出错误
 if (condition) {
 
     let count = 40;
 
-    // more code
+    // 更多代码
 }
 ```
 
-This `let` declaration doesn't throw an error because it creates a new variable called `count` within the `if` statement, instead of creating `count` in the surrounding block. Inside the `if` block, this new variable shadows the global `count`, preventing access to it until execution leaves the block.
+这个`let`声明不会抛出错误，因为它是在`if`语句里创建了一个新的变量`count`，而不是在外层代码块创建。在`if`代码块里，这个新的变量会盖住全局变量`count`，以避免访问它，直到执行离开这个代码块。
 
-### Constant Declarations
 
-You can also define variables in ECMAScript 6 with the `const` declaration syntax. Variables declared using `const` are considered *constants*, meaning their values cannot be changed once set. For this reason, every `const` variable must be initialized on declaration, as shown in this example:
+### 常量声明
+
+在ES6里你也可以通过`const`语法定义变量。通过`const`声明的变量会被当作“常量”，也就是他们的值一旦被赋予就不能被改变。因为这个原因，每一个`const`变量都必须在声明时初始化，如下例子：
 
 ```js
-// Valid constant
+// 有效的常量
 const maxItems = 30;
 
-// Syntax error: missing initialization
+// 语法错误：没有初始化
 const name;
 ```
 
-The `maxItems` variable is initialized, so its `const` declaration should work without a problem. The `name` variable, however, would cause a syntax error if you tried to run the program containing this code, because `name` is not initialized.
+`maxItems`变量被初始化了，所以它的`const`声明应该可以正常工作。然而当你尝试去执行包含`name`变量的代码程序时，它会引起语法错误，因为`name`没有被初始化。
 
 
-#### Constants vs Let Declarations
+#### 常量 vs Let声明
 
-Constants, like `let` declarations, are block-level declarations. That means constants are no longer accessible once execution flows out of the block in which they were declared, and declarations are not hoisted, as demonstrated in this example:
+常量是块级声明，跟`let`声明一样。那意味着一旦执行离开了常量被声明的代码块，常量就不能再被访问，而且声明也不会被提升。如下例子：
 
 ```js
 if (condition) {
     const maxItems = 5;
 
-    // more code
+    // 更多代码
 }
 
-// maxItems isn't accessible here
+// 此处maxItems不能被访问
 ```
 
 In this code, the constant `maxItems` is declared within an `if` statement. Once the statement finishes executing, `maxItems` is not accessible outside of that block.
