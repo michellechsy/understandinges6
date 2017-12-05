@@ -143,67 +143,67 @@ if (condition) {
 // 此处maxItems不能被访问
 ```
 
-In this code, the constant `maxItems` is declared within an `if` statement. Once the statement finishes executing, `maxItems` is not accessible outside of that block.
+在这段代码里，常量`maxItems`是在`if`语句里定义的。一旦该语句执行完毕，`maxItems`就不能在该代码块外被访问。
 
-In another similarity to `let`, a `const` declaration throws an error when made with an identifier for an already-defined variable in the same scope. It doesn't matter if that variable was declared using `var` (for global or function scope) or `let` (for block scope). For example, consider this code:
+和`let`另一个相似之处，当一个已经在同一个作用域里被定义过的标识符在`const`声明中被使用时会抛出异常，不管该变量是被`var`（全局的或者函数作用域的）还是被`let`（块作用域）定义。比如这段代码：
 
 ```js
 var message = "Hello!";
 let age = 25;
 
-// Each of these would throw an error.
+// 以下每一个都会抛出异常。
 const message = "Goodbye!";
 const age = 30;
 ```
 
-The two `const` declarations would be valid alone, but given the previous `var` and `let` declarations in this case, neither will work as intended.
+单独使用时，这两个`const`声明是有效的。但在这个例子中，因为前面已经给定了`var`和`let`声明，这两个都不会如你所期望的那样生效。
 
-Despite those similarities, there is one big difference between `let` and `const` to remember. Attempting to assign a `const` to a previously defined constant will throw an error, in both strict and non-strict modes:
+除了这些相似之处，`let`和`const`之间还有一个很大的区别需要留意。在严格和非严格模式下，企图给一个已经定义过的常量通过`const`再次赋值都会抛出异常：
 
 ```js
 const maxItems = 5;
 
-maxItems = 6;      // throws error
+maxItems = 6;      // 抛出异常
 ```
 
-Much like constants in other languages, the `maxItems` variable can't be assigned a new value later on. However, unlike constants in other languages, the value a constant holds may be modified if it is an object.
+跟其他编程语言的常量一样，`maxItems`变量不能再次被赋新值。但是，跟其他编程语言不一样的是，如果该常量是一个对象（object），它的值是有可能被修改的。
 
-#### Declaring Objects with Const
+#### 用Const声明对象
 
-A `const` declaration prevents modification of the binding and not of the value itself. That means `const` declarations for objects do not prevent modification of those objects. For example:
+`const`声明不允许绑定（binding）被修改，并不是指值本身。也就是说，通过`const`声明的对象并不会预防被修改。比如：
 
 ```js
 const person = {
     name: "Nicholas"
 };
 
-// works
+// 可行
 person.name = "Greg";
 
-// throws an error
+// 抛出异常
 person = {
     name: "Greg"
 };
 ```
 
-Here, the binding `person` is created with an initial value of an object with one property. It's possible to change `person.name` without causing an error because this changes what `person` contains and doesn't change the value that `person` is bound to. When this code attempts to assign a value to `person` (thus attempting to change the binding), an error will be thrown. This subtlety in how `const` works with objects is easy to misunderstand. Just remember: `const` prevents modification of the binding, not modification of the bound value.
+在这个例子里，`person`的绑定被创建时被赋予了初始值，一个只有一个属性的对象。修改`person.name`的值是不会引起错误的，因为`person`所包含的改变并没有改变`person`所绑定的值。而当尝试给`person`赋新值时（即尝试改变绑定），代码会抛出异常。`const`对于对象的实现原理的这一巧妙之处是很容易引起误解的。只要记住：`const`预防的是对绑定的修改，而不是被綁定的值。
 
-### The Temporal Dead Zone
+### 暂时性死区（dead zone）
 
-A variable declared with either `let` or `const` cannot be accessed until after the declaration. Attempting to do so results in a reference error, even when using normally safe operations such as the `typeof` operation in this example:
+被`let`或者`const`声明的变量在声明之后才能被访问。若在声明之前企图去访问该变量，哪怕是一些安全操作，都会导致引用错误。比如这个例子里的`typeof`操作：
 
 ```js
 if (condition) {
-    console.log(typeof value);  // ReferenceError!
+    console.log(typeof value);  // ReferenceError（引用错误）!
     let value = "blue";
 }
 ```
 
-Here, the variable `value` is defined and initialized using `let`, but that statement is never executed because the previous line throws an error. The issue is that `value` exists in what the JavaScript community has dubbed the *temporal dead zone* (TDZ). The TDZ is never named explicitly in the ECMAScript specification, but the term is often used to describe why `let` and `const` declarations are not accessible before their declaration. This section covers some subtleties of declaration placement that the TDZ causes, and although the examples shown all use `let`, note that the same information applies to `const`.
+在这个例子中，`value`通过`let`定义并初始化了，但该语句永远不会被执行，因为它上面一行代码抛出了异常。`value`存在哪里的这个问题在JavaScript社区里被成为“暂时性死区”(TDZ).TDZ一直都没有很明显地写在ECMAScript规范里，但这个术语经常被用来描述为何`let`和`const`声明不能在它们的声明语句之前被使用。这一部分将会介绍一些TDZ引起的声明位置的微妙之处，虽然例子中用的都是`let`，但对于`const`同样适用。
 
-When a JavaScript engine looks through an upcoming block and finds a variable declaration, it either hoists the declaration to the top of the function or global scope (for `var`) or places the declaration in the TDZ (for `let` and `const`). Any attempt to access a variable in the TDZ results in a runtime error. That variable is only removed from the TDZ, and therefore safe to use, once execution flows to the variable declaration.
+当JavaScript引擎轮询新进的代码块并且找到一个变量声明时，它要么把声明提升到函数或者全局（对于`var`）作用域的顶部，要么把声明放到TDZ（对于`let`和`const`）中。而且任何企图访问TDZ里的变量的行为都会导致运行时错误。该变量只能从TDZ里移除，因此当代码执行到该变量声明，对它的使用是可靠安全的。
 
-This is true anytime you attempt to use a variable declared with `let` or `const`  before it's been defined. As the previous example demonstrated, this even applies to the normally safe `typeof` operator. You can, however, use `typeof` on a variable outside of the block where that variable is declared, though it may not give the results you're after. Consider this code:
+无论何时，一个通过`let`或者`const`声明的变量被定义之前，如果你尝试去调用它，以上理论都是成立的。就像前面例子所展示的，这理论同样适用于可靠的`typeof`操作。但是 ，尽管你不一定能拿到想要的值，你还是可以在变量被声明的代码块以外对变量使用`typeof`。比如：
 
 ```js
 console.log(typeof value);     // "undefined"
@@ -213,39 +213,39 @@ if (condition) {
 }
 ```
 
-The variable `value` isn't in the TDZ when the `typeof` operation executes because it occurs outside of the block in which `value` is declared. That means there is no `value` binding, and `typeof` simply returns `"undefined"`.
+当`typeof`操作执行时，变量`value`并不在TDZ里，因为它出现在`value`被定义的块之外。也就是说，没有`value`的绑定，因此`typeof`只是简单地返回了`"undefined"`
 
-The TDZ is just one unique aspect of block bindings. Another unique aspect has to do with their use inside of loops.
+TDZ只是块绑定的一个特点。另一个特点跟循环中的使用有关。
 
-## Block Binding in Loops
+## 循环中的块绑定
 
-Perhaps one area where developers most want block level scoping of variables is within `for` loops, where the throwaway counter variable is meant to be used only inside the loop. For instance, it's not uncommon to see code like this in JavaScript:
+对于变量的块级作用域的使用，开发者比较需要的一点也许是在`for`循环中使用的那些用完即弃的计数变量。比如说，以下代码在JavaScript中并不常见：
 
 ```js
 for (var i = 0; i < 10; i++) {
     process(items[i]);
 }
 
-// i is still accessible here
+// i仍然可以被访问
 console.log(i);                     // 10
 ```
 
-In other languages, where block level scoping is the default, this example should work as intended, and only the `for` loop should have access to the `i` variable. In JavaScript, however, the variable `i` is still accessible after the loop is completed because the `var` declaration gets hoisted. Using `let` instead, as in the following code, should give the intended behavior:
+在其他编程语言中，默认都是块级作用域的。这个例子理应也如此，理应只有`for`循环可以访问到变量`i`。然而在JavaScript中，因为`var`声明被提升了，变量`i`在循环结束后仍然可以被访问。而当替换成`let`之后，它应该会是预期的行为。如下例：
 
 ```js
 for (let i = 0; i < 10; i++) {
     process(items[i]);
 }
 
-// i is not accessible here - throws an error
+// i不能被访问 - 抛出异常
 console.log(i);
 ```
 
-In this example, the variable `i` only exists within the `for` loop. Once the loop is complete, the variable is no longer accessible elsewhere.
+在这个例子中，变量`i`只存在于`for`循环中。一旦循环结束，该变量不能再被访问。
 
-### Functions in Loops
+### 循环中的函数
 
-The characteristics of `var` have long made creating functions inside of loops problematic, because the loop variables are accessible from outside the scope of the loop. Consider the following code:
+长期以来，`var`的特性给在循环中创建的函数带来不少问题，主要是因为循环中的变量在循环作用域外被访问。比如说：
 
 ```js
 var funcs = [];
@@ -255,13 +255,13 @@ for (var i = 0; i < 10; i++) {
 }
 
 funcs.forEach(function(func) {
-    func();     // outputs the number "10" ten times
+    func();     // 输出十次数字“10”
 });
 ```
 
-You might ordinarily expect this code to print the numbers 0 to 9, but it outputs the number 10 ten times in a row. That's because `i` is shared across each iteration of the loop, meaning the functions created inside the loop all hold a reference to the same variable. The variable `i` has a value of `10` once the loop completes, and so when `console.log(i)` is called, that value prints each time.
+一般情况下，你会希望这段代码打印0到9的数字，可它却在同一行输出了十次数字10。那是因为`i`是跨循环遍历共享的，也就是说，所有在循环里创建的函数都指向了同一个变量的引用。当循环结束时`i`的值是10，所以当`console.log(i)`被调用时，每一次都会被打印这个值。
 
-To fix this problem, developers use immediately-invoked function expressions (IIFEs) inside of loops to force a new copy of the variable they want to iterate over to be created, as in this example:
+为了解决这个问题，开发者们在循环中使用了立即调用的函数表达式（IIFEs），以便在遍历时可以强制性地创建该变量的一个副本。就像以下例子：
 
 ```js
 var funcs = [];
@@ -275,15 +275,15 @@ for (var i = 0; i < 10; i++) {
 }
 
 funcs.forEach(function(func) {
-    func();     // outputs 0, then 1, then 2, up to 9
+    func();     // 输出0, 然后是1, 2, 直到9
 });
 ```
 
-This version uses an IIFE inside of the loop. The `i` variable is passed to the IIFE, which creates its own copy and stores it as `value`. This is the value used by the function for that iteration, so calling each function returns the expected value as the loop counts up from 0 to 9. Fortunately, block-level binding with `let` and `const` in ECMAScript 6 can simplify this loop for you.
+这个版本在循环中用了一个IIFE。变量`i`被传到IIFE时，会创建一个副本并且把副本赋给了`value`。在迭代遍历时函数将使用这个值，因此当循环计数从0计到9时，每一个函数的调用都会返回我们所期望的值。庆幸的是，在ES6中，`let`和`const`的块级绑定为我们简化了这个循环。
 
-### Let Declarations in Loops
+### 循环中的Let声明
 
-A `let` declaration simplifies loops by effectively mimicking what the IIFE does in the previous example. On each iteration, the loop creates a new variable and initializes it to the value of the variable with the same name from the previous iteration. That means you can omit the IIFE altogether and get the results you expect, like this:
+`let`声明通过有效的模拟上述例子中IIFE的工作方式简化了循环。在每一次遍历中，循环都会创建一个跟上一次遍历所使用的变量同名的新变量，并以其值做初始化。也就是说，你可以忽略IIFE，还能得到你想要的结果。就像这样：
 
 ```js
 var funcs = [];
@@ -295,11 +295,11 @@ for (let i = 0; i < 10; i++) {
 }
 
 funcs.forEach(function(func) {
-    func();     // outputs 0, then 1, then 2, up to 9
+    func();     // 输出0, 然后是1, 2, 直到9
 })
 ```
 
-This loop works exactly like the loop that used `var` and an IIFE but is, arguably, cleaner. The `let` declaration creates a new variable `i` each time through the loop, so each function created inside the loop gets its own copy of `i`. Each copy of `i` has the value it was assigned at the beginning of the loop iteration in which it was created. The same is true for `for-in` and `for-of` loops, as shown here:
+这个循环的效果跟用`var`和IIFE的那个循环是一样的，而且更简洁。每一次遍历循环，`let`声明都创建了一个新的变量`i`，因此在循环中创建的每一个函数都会拿到一个属于它自己的`i`的副本。每一个`i`的副本都会有自己的值，而且这个值是在循环遍历开始时副本被创建的时候赋予的。对于`for-in`和`for-of`也一样。比如：
 
 ```js
 var funcs = [],
@@ -316,22 +316,22 @@ for (let key in object) {
 }
 
 funcs.forEach(function(func) {
-    func();     // outputs "a", then "b", then "c"
+    func();     // 输出"a","b","c"
 });
 ```
 
-In this example, the `for-in` loop shows the same behavior as the `for` loop. Each time through the loop, a new `key` binding is created, and so each function has its own copy of the `key` variable. The result is that each function outputs a different value. If `var` were used to declare `key`, all functions would output `"c"`.
+这个例子中，`for-in`循环有着和`for`一样的行为。每一次遍历循环，都会创建一个新的`key`绑定，因此每一个函数都会有属于它自己的变量`key`的副本。最后每一个函数都会输出不一样的值。但如果用`var`来定义`key`，所有的函数都会输出`”c“`。
 
-I> It's important to understand that the behavior of `let` declarations in loops is a specially-defined behavior in the specification and is not necessarily related to the non-hoisting characteristics of `let`. In fact, early implementations of `let` did not have this behavior, as it was added later on in the process.
+I> 需要特别注意理解的是，在ES6的规范里，循环中`let`声明的行为是一种特别定义的行为，它与`let`的不提升特性不一定有关联。实际上，`let`的早期实现并没有这种行为，毕竟它是在后来才加上的。
 
-### Constant Declarations in Loops
+### 循环中的常量声明
 
-The ECMAScript 6 specification doesn't explicitly disallow `const` declarations in loops; however, there are different behaviors based on the type of loop you're using. For a normal `for` loop, you can use `const` in the initializer, but the loop will throw a warning if you attempt to change the value. For example:
+ES6规范并没有明确地不允许在循环中使用`const`声明；使用不同的循环类型，它们的行为也会不一样。对于普通的`for`循环，你可以在初始化代码里使用`const`，但当你企图改变它的值时循环将会抛出警告。比如：
 
 ```js
 var funcs = [];
 
-// throws an error after one iteration
+// 在一次遍历后将抛出异常
 for (const i = 0; i < 10; i++) {
     funcs.push(function() {
         console.log(i);
@@ -339,9 +339,9 @@ for (const i = 0; i < 10; i++) {
 }
 ```
 
-In this code, the `i` variable is declared as a constant. The first iteration of the loop, where `i` is 0, executes successfully. An error is thrown when `i++` executes because it's attempting to modify a constant. As such, you can only use `const` to declare a variable in the loop initializer if you are not modifying that variable.
+在这段代码中，变量`i`被定义成了一个常量。循环第一次遍历时，`i`为0，可以执行成功。而当执行`i++`时，因为它企图改变一个常量，这时候就会抛出异常。同样地，如果你不打算修改一个变量，你可以在循环的初始化代码中用`const`定义一个变量。
 
-When used in a `for-in` or `for-of` loop, on the other hand, a `const` variable behaves the same as a `let` variable. So the following should not cause an error:
+另一方面，在`for-in`或者`for-of`循环中，一个`const`变量的行为和一个`let`变量是一样的。因此，以下代码不应该引起错误：
 
 ```js
 var funcs = [],
@@ -351,7 +351,7 @@ var funcs = [],
         c: true
     };
 
-// doesn't cause an error
+//不会有错误
 for (const key in object) {
     funcs.push(function() {
         console.log(key);
@@ -359,18 +359,18 @@ for (const key in object) {
 }
 
 funcs.forEach(function(func) {
-    func();     // outputs "a", then "b", then "c"
+    func();     // 输出“a“，”b“，”c“
 });
 ```
 
-This code functions almost exactly the same as the second example in the "Let Declarations in Loops" section. The only difference is that the value of `key` cannot be changed inside the loop. The `for-in` and `for-of` loops work with `const` because the loop initializer creates a new binding on each iteration through the loop rather than attempting to modify the value of an existing binding (as was the case with the previous example using `for` instead of `for-in`).
+这段代码跟我们在”循环中的Let声明“中列举的第二个例子的行为差不多。唯一的区别是在循环中`key`的值不能被改变。而在`for-in`和`for-of`循环中是可以使用`const`的，因为循环中的初始化代码会在每一次遍历中创建一个新的绑定，而不是企图改变一个现有的绑定的值（如同上一个例子中用`for`而不是`for-in`一样）。
 
-## Global Block Bindings
+## 全局的块绑定
 
-Another way in which `let` and `const` are different from `var` is in their global scope behavior. When `var` is used in the global scope, it creates a new global variable, which is a property on the global object (`window` in browsers). That means you can accidentally overwrite an existing global using `var`, such as:
+`let`和`const`和`var`另一个不一样的方面是它们在全局作用域中的行为。当在全局作用域中使用`var`时，它会创建一个新的全局变量，该变量还是全局对象（浏览器中的`window`）的一个属性。那意味着你可以通过`var`不经意地就重写一个现有的全局变量。比如：
 
 ```js
-// in a browser
+// 在浏览器里
 var RegExp = "Hello!";
 console.log(window.RegExp);     // "Hello!"
 
@@ -378,7 +378,7 @@ var ncz = "Hi!";
 console.log(window.ncz);        // "Hi!"
 ```
 
-Even though the `RegExp` global is defined on `window`, it is not safe from being overwritten by a `var` declaration. This example declares a new global variable `RegExp` that overwrites the original. Similarly, `ncz` is defined as a global variable and immediately defined as a property on `window`. This is the way JavaScript has always worked.
+即便是定义在`window`中的全局`RegExp`，通过`var`声明重写变量是不可靠的。这个例子定义了一个新的全局变量`RegExp`，它重写了原来的`RegExp`。类似地，`ncz`被定义为一个全局变量，并且立即就被定义成`window`的一个属性。这种方式在JavaScript里是一直都生效的。
 
 If you instead use `let` or `const` in the global scope, a new binding is created in the global scope but no property is added to the global object. That also means you cannot overwrite a global variable using `let` or `const`, you can only shadow it. Here's an example:
 
@@ -393,20 +393,18 @@ console.log(ncz);                       // "Hi!"
 console.log("ncz" in window);           // false
 ```
 
-Here, a new `let` declaration for `RegExp` creates a binding that shadows the global `RegExp`. That means `window.RegExp` and `RegExp` are not the same, so there is no disruption to the global scope. Also, the `const` declaration for `ncz` creates a binding but does not create a property on the global object. This capability makes `let` and `const` a lot safer to use in the global scope when you don't want to create properties on the global object.
+此处，`REgExp`的一个新的`let`声明创建了一个覆盖了全局`RegExp`的绑定。那意味着`window.RegExp`和`RegExp`是不一样的，因此全局作用域并没有被破坏。同样的，`ncz`的`const`声明创建了一个绑定，但并没有在全局对象上创建属性。当你并不想在全局对象上创建属性时，这种性能使得`let`和`const`在全局作用域下可以更安全地使用。
 
-I> You may still want to use `var` in the global scope if you have a code that should be available from the global object. This is most common in a browser when you want to access code across frames or windows.
+I> 如果你希望某一些代码在全局对象中生效，你可能仍希望在全局作用域里使用`var`。这在浏览器跨框架或者窗口访问代码中是很常见的。
+## 块绑定的一些最佳实践（Best Practices）
 
-## Emerging Best Practices for Block Bindings
+在ES6还处于开发阶段的时候，普遍的看法认为你应该默认使用`let`而不是`var`来声明变量。对于大多数的JavaScript开发者来说，`let`的确如他们所想的那样工作，因此逻辑上来说直接替换是行得通的。在这种情况下，当变量需要避免被修改时你可能需要用`const`。
+然而，随着越来越多的开发者升级到ES6后，另一种方式越来越受欢迎：默认使用`const`，当且仅当你知道一个变量的值是需要改变的时候才使用`let`。理论上来看大部分的变量在初始化之后都不应该被改变值的，毕竟不可预期的值变化是bugs的一个来源。这想法有一个很重要的牵引作用，而且当你接受ES6时也应该在代码里这么做。
 
-While ECMAScript 6 was in development, there was widespread belief you should use `let` by default instead of `var` for variable declarations. For many JavaScript developers, `let` behaves exactly the way they thought `var` should have behaved, and so the direct replacement makes logical sense. In this case, you would use `const` for variables that needed modification protection.
+## 总结
 
-However, as more developers migrated to ECMAScript 6, an alternate approach gained popularity: use `const` by default and only use `let` when you know a variable's value needs to change. The rationale is that most variables should not change their value after initialization because unexpected value changes are a source of bugs. This idea has a significant amount of traction and is worth exploring in your code as you adopt ECMAScript 6.
+`let`和`const`的块绑定为JavaScript引入了文本化范围的作用域。这些声明不会被提升，而且只存在于它们被声明的代码块里。这提供和大多数编程语言相似的行为，因为变量可以在被需要的时候才声明，这也减少了无意中引起错误的可能性。随之而来的问题是，你不能在变量被声明之前访问它们，即使是用像`typeof`那样安全可靠的操作符来访问。由于块绑定存在于暂时性死区（TDZ），在声明之前企图访问一个块绑定将会导致错误。
 
-## Summary
+很多情况下，`let`和`const`的行为很大程度上都和`var`相似；但在循环中并不如此。对于`let`和`const`，`for-in`和`for-of`循环会在每一次遍历中创建一个新的绑定。那意味着在循环体内创建的函数在当前遍历中可以访问循环绑定的值，而不是在循环的最后一次遍历（`var`的行为方式）。在`for`循环里使用`let`声明会和`const`一样都会导致错误。
 
-The `let` and `const` block bindings introduce lexical scoping to JavaScript. These declarations are not hoisted and only exist within the block in which they are declared. This offers behavior that is more like other languages and less likely to cause unintentional errors, as variables can now be declared exactly where they are needed. As a side effect, you cannot access variables before they are declared, even with safe operators such as `typeof`. Attempting to access a block binding before its declaration results in an error due to the binding's presence in the temporal dead zone (TDZ).
-
-In many cases, `let` and `const` behave in a manner similar to `var`; however, this is not true for loops. For both `let` and `const`, `for-in` and `for-of` loops create a new binding with each iteration through the loop. That means functions created inside the loop body can access the loop bindings values as they are during the current iteration, rather than as they were after the loop's final iteration (the behavior with `var`). The same is true for `let` declarations in `for` loops, while attempting to use `const` declarations in a `for` loop may result in an error.
-
-The current best practice for block bindings is to use `const` by default and only use `let` when you know a variable's value needs to change. This ensures a basic level of immutability in code that can help prevent certain types of errors.
+目前块绑定的最佳实践是默认使用`const`，并且在你知道一个变量的值是需要变化的时候使用`let`。这可以在基础级别上保证代码里的不变性，也可以预防某些类型的错误。
