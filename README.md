@@ -8,9 +8,9 @@ https://github.com/nzakas/understandinges6
 
 ## Items
 - [x] 01 - Block Bindings
-- [ ] 02 - Strings and Regular Expressions
+- [x] 02 - Strings and Regular Expressions
 - [x] 03 - Functions
-- [ ] 04 - Objects
+- [x] 04 - Objects
 - [ ] 05 - Destructuring
 - [ ] 06 - Symbols
 - [ ] 07 - Sets and Maps
