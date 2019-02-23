@@ -11,7 +11,7 @@ https://github.com/nzakas/understandinges6
 - [x] 02 - Strings and Regular Expressions
 - [x] 03 - Functions
 - [x] 04 - Objects
-- [ ] 05 - Destructuring
+- [x] 05 - Destructuring
 - [ ] 06 - Symbols
 - [ ] 07 - Sets and Maps
 - [ ] 08 - Iterators and Generator
